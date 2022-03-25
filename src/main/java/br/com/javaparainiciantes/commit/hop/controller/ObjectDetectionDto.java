@@ -17,4 +17,10 @@ public class ObjectDetectionDto implements Serializable {
 	
 	private MultipartFile image;
 	
+	private String inputDataType;
+	
+	private int inputWidth;
+
+	private int inputHeigth;
+	
 }

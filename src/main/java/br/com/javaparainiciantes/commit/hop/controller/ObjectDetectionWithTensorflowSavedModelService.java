@@ -12,29 +12,8 @@
  */
 package br.com.javaparainiciantes.commit.hop.controller;
 
-import ai.djl.Application;
-import ai.djl.ModelException;
-import ai.djl.inference.Predictor;
-import ai.djl.modality.cv.Image;
-import ai.djl.modality.cv.ImageFactory;
-import ai.djl.modality.cv.output.BoundingBox;
-import ai.djl.modality.cv.output.DetectedObjects;
-import ai.djl.modality.cv.output.Rectangle;
-import ai.djl.modality.cv.util.NDImageUtils;
-import ai.djl.ndarray.NDArray;
-import ai.djl.ndarray.NDList;
-import ai.djl.ndarray.types.DataType;
-import ai.djl.repository.zoo.Criteria;
-import ai.djl.repository.zoo.ZooModel;
-import ai.djl.training.util.ProgressBar;
-import ai.djl.translate.NoBatchifyTranslator;
-import ai.djl.translate.TranslateException;
-import ai.djl.translate.TranslatorContext;
-import ai.djl.util.JsonUtils;
-import lombok.extern.slf4j.Slf4j;
-
-import com.google.gson.annotations.SerializedName;
 import java.io.BufferedInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -48,25 +27,45 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import org.springframework.stereotype.Component;
+
+import com.google.gson.annotations.SerializedName;
+
+import ai.djl.Application;
+import ai.djl.MalformedModelException;
+import ai.djl.inference.Predictor;
+import ai.djl.modality.cv.Image;
+import ai.djl.modality.cv.ImageFactory;
+import ai.djl.modality.cv.output.BoundingBox;
+import ai.djl.modality.cv.output.DetectedObjects;
+import ai.djl.modality.cv.output.Rectangle;
+import ai.djl.modality.cv.util.NDImageUtils;
+import ai.djl.ndarray.NDArray;
+import ai.djl.ndarray.NDList;
+import ai.djl.ndarray.types.DataType;
+import ai.djl.repository.zoo.Criteria;
+import ai.djl.repository.zoo.ModelNotFoundException;
+import ai.djl.repository.zoo.ZooModel;
+import ai.djl.training.util.ProgressBar;
+import ai.djl.translate.NoBatchifyTranslator;
+import ai.djl.translate.TranslateException;
+import ai.djl.translate.TranslatorContext;
+import ai.djl.util.JsonUtils;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Component
 public class ObjectDetectionWithTensorflowSavedModelService {
-
-    public static void main(String[] args) throws IOException, ModelException, TranslateException {
-        DetectedObjects detection = new ObjectDetectionWithTensorflowSavedModelService().predict();
-        log.info("{}", detection);
-    }
-
-    public DetectedObjects predict() throws IOException, ModelException, TranslateException {
-        Path imageFile = Paths.get("image/dog-cat.jpg");
+	
+	public Path predict(ObjectDetectionDto dto, File image ) throws IOException, ModelNotFoundException, MalformedModelException, TranslateException {
+        Path imageFile = Paths.get(image.getAbsolutePath());
         Image img = ImageFactory.getInstance().fromFile(imageFile);
 
-        String modelUrl =
-                "http://download.tensorflow.org/models/object_detection/tf2/20200711/ssd_mobilenet_v2_320x320_coco17_tpu-8.tar.gz";
-        // tested with https://tfhub.dev/tensorflow/centernet/resnet50v2_512x512_kpts/1
-        // https://tfhub.dev/tensorflow/ssd_mobilenet_v2/fpnlite_320x320/1
+        String modelUrl = dto.getModelUrl();
+        DataType dataType = DataType.valueOf(dto.getInputDataType());
+        int width = dto.getInputWidth();
+        int heigth = dto.getInputHeigth();
 
         Criteria<Image, DetectedObjects> criteria =
                 Criteria.builder()
@@ -75,7 +74,7 @@ public class ObjectDetectionWithTensorflowSavedModelService {
                         .optModelUrls(modelUrl)
                         // saved_model.pb file is in the subfolder of the model archive file
                         .optModelName("saved_model")
-                        .optTranslator(new MyTranslator())
+                        .optTranslator(new MyTranslator(dataType, width, heigth))
                         .optEngine("TensorFlow")
                         .optProgress(new ProgressBar())
                         .build();
@@ -83,22 +82,22 @@ public class ObjectDetectionWithTensorflowSavedModelService {
         try (ZooModel<Image, DetectedObjects> model = criteria.loadModel();
                 Predictor<Image, DetectedObjects> predictor = model.newPredictor()) {
             DetectedObjects detection = predictor.predict(img);
-            saveBoundingBoxImage(img, detection);
-            return detection;
-        }
-    }
+            return saveBoundingBoxImage(img, detection, imageFile);
+        }		
+	}
 
-    private void saveBoundingBoxImage(Image img, DetectedObjects detection)
+    private Path saveBoundingBoxImage(Image img, DetectedObjects detection, Path imageFile)
             throws IOException {
-        Path outputDir = Paths.get("build/output");
+        Path outputDir = imageFile.getParent();
         Files.createDirectories(outputDir);
 
         img.drawBoundingBoxes(detection);
 
-        Path imagePath = outputDir.resolve("detected-tensorflow-model-dog_bike_car.png");
+        Path imagePath = outputDir.resolve("detected-" + imageFile.getFileName().toString());
         // OpenJDK can't save jpg with alpha channel
         img.save(Files.newOutputStream(imagePath), "png");
         log.info("Detected objects image has been saved in: {}", imagePath);
+        return imagePath;
     }
 
     
@@ -116,10 +115,23 @@ public class ObjectDetectionWithTensorflowSavedModelService {
         private Map<Integer, String> classes;
         private int maxBoxes;
         private float threshold;
+        private DataType inputDataType;
+		private int inputHeight;
+		private int inputWidth;
 
         MyTranslator() {
-            maxBoxes = 10;
+            maxBoxes = 20;
             threshold = 0.7f;
+            inputDataType = DataType.UINT8;
+            inputHeight = 224;
+            inputWidth = 224;
+        }
+        
+        MyTranslator(DataType input, int width, int heigth){
+        	this();
+        	inputDataType = input;
+        	inputWidth = width;
+        	inputHeight = heigth;
         }
 
         /** {@inheritDoc} */
@@ -127,10 +139,9 @@ public class ObjectDetectionWithTensorflowSavedModelService {
         public NDList processInput(TranslatorContext ctx, Image input) {
             // input to tf object-detection models is a list of tensors, hence NDList
             NDArray array = input.toNDArray(ctx.getNDManager(), Image.Flag.COLOR);
-            // optionally resize the image for faster processing
-            array = NDImageUtils.resize(array, 224);
+			array = NDImageUtils.resize(array, inputWidth, inputHeight);
             // tf object-detection models expect 8 bit unsigned integer tensor
-            array = array.toType(DataType.UINT8, true);
+            array = array.toType(inputDataType, true);
             array = array.expandDims(0); // tf object-detection models expect a 4 dimensional input
             return new NDList(array);
         }
