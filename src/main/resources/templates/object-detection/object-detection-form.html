@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head> 
+	<title>Object Detection Test</title> 
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+<body>
+	<h1>Object Detection</h1>
+	<form th:action="@{/object-detection/execute}" method="post" enctype="multipart/form-data">
+		<div>
+			Model Url: <input name="modelUrl" />
+		</div>
+		<div>
+			Image: <input name="image" type="file"/>
+		</div>
+		<div>
+			<input type="submit" value="Detect" name="button"/>
+		</div>
+	</form>
+</body>
+</html>
