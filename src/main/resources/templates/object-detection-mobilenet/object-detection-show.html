@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head> 
+	<title>Object Detection Results</title> 
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+</head>
+<body>
+	<h1>Object Detection Results</h1>
+	<div class="container">
+		<div class="row">
+			<h3>Model: </h3>
+			<p th:text="${dto.modelUrl}"></p>
+		</div>
+		<div class="row">
+			<img alt="Imagem" src="" th:attr="src=${dto.imageBase64}">
+		</div>
+		<div class="row">
+			<a href="/object-detection-mobilenet">New Object Detection</a>
+		</div>
+	</div>
+</body>

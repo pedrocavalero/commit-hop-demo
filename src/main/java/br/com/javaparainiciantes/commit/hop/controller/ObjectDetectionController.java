@@ -1,10 +1,5 @@
 package br.com.javaparainiciantes.commit.hop.controller;
 
-import java.io.File;
-import java.nio.file.Path;
-
-import javax.servlet.http.HttpServletRequest;
-
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -14,10 +9,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import ai.djl.modality.cv.Image;
 import ai.djl.modality.cv.ImageFactory;
 import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Controller
-@Slf4j
 @AllArgsConstructor
 public class ObjectDetectionController {
 	
@@ -31,8 +24,7 @@ public class ObjectDetectionController {
 
 	@PostMapping("/object-detection/execute")
 	public String executeDetection(@ModelAttribute ObjectDetectionDto dto, Model model) {        
-        try
-        {
+        try {
         	Image image = ImageFactory.getInstance().fromInputStream(dto.getImage().getInputStream());
         	detectorService.predict(dto, image);
         	model.addAttribute("dto",dto);
