@@ -1,13 +1,21 @@
 package br.com.javaparainiciantes.commit.hop;
 
-import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@SpringBootTest
+import java.io.IOException;
+import java.util.Map;
+
+import org.junit.jupiter.api.Test;
+
+import br.com.javaparainiciantes.commit.hop.controller.ObjectDetectionWithTensorflowSavedModelService;
+
 class DemoApplicationTests {
 
 	@Test
-	void contextLoads() {
+	void labelMapLoadTest() throws IOException {
+		Map<Integer,String> synset = ObjectDetectionWithTensorflowSavedModelService.MyTranslator.loadSynset();
+		assertEquals("person", synset.get(1));
+		
 	}
 
 }

@@ -109,7 +109,7 @@ public class ObjectDetectionWithTensorflowSavedModelService {
         String displayName;
     }
 
-    private static final class MyTranslator
+    public static final class MyTranslator
             implements NoBatchifyTranslator<Image, DetectedObjects> {
 
         private Map<Integer, String> classes;
@@ -154,18 +154,15 @@ public class ObjectDetectionWithTensorflowSavedModelService {
             }
         }
         
-        static Map<Integer, String> loadSynset() throws IOException {
-            URL synsetUrl =
-                    new URL(
-                            "https://raw.githubusercontent.com/tensorflow/models/master/research/object_detection/data/mscoco_label_map.pbtxt");
+        public static Map<Integer, String> loadSynset() throws IOException {
             Map<Integer, String> map = new ConcurrentHashMap<>();
             int maxId = 0;
-            try (InputStream is = new BufferedInputStream(synsetUrl.openStream());
+            try (InputStream is = new BufferedInputStream(MyTranslator.class.getResourceAsStream("/mscoco-label-map.txt"));
                     Scanner scanner = new Scanner(is, StandardCharsets.UTF_8.name())) {
                 scanner.useDelimiter("item ");
                 while (scanner.hasNext()) {
                     String content = scanner.next();
-                    content = content.replaceAll("(\"|\\d)\\n\\s", "$1,");
+                    content = content.replaceAll("(\"|\\d)\\r\\n\\s", "$1,");
                     Item item = JsonUtils.GSON.fromJson(content, Item.class);
                     map.put(item.id, item.displayName);
                     if (item.id > maxId) {
