@@ -30,15 +30,12 @@ public class ObjectDetectionController {
 	}
 
 	@PostMapping("/object-detection/execute")
-	public String executeDetection(HttpServletRequest servletRequest, @ModelAttribute ObjectDetectionDto dto, Model model) {        
+	public String executeDetection(@ModelAttribute ObjectDetectionDto dto, Model model) {        
         try
         {
         	Image image = ImageFactory.getInstance().fromInputStream(dto.getImage().getInputStream());
-        	String destinationPathDir = servletRequest.getServletContext().getRealPath("/image");
-        	dto.setDestinationPathDir(destinationPathDir);
-        	Path predicted = detectorService.predict(dto, image);
+        	detectorService.predict(dto, image);
         	model.addAttribute("dto",dto);
-        	model.addAttribute("image", "/image/"+predicted.getFileName());
         	
         } catch (Exception e) {
             model.addAttribute("error", e);

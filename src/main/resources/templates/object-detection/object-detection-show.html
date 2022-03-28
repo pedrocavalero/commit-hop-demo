@@ -13,7 +13,7 @@
 			<p th:text="${dto.modelUrl}"></p>
 		</div>
 		<div class="row">
-			<img alt="Imagem" src="" th:attr="src=${image}">
+			<img alt="Imagem" src="" th:attr="src=${dto.imageBase64}">
 		</div>
 		<div class="row">
 			<a href="/object-detection">New Object Detection</a>

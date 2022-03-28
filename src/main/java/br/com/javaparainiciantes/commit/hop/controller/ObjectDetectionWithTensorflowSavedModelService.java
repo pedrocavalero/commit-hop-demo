@@ -13,6 +13,7 @@
 package br.com.javaparainiciantes.commit.hop.controller;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,6 +29,7 @@ import java.util.Objects;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.commons.codec.binary.Base64OutputStream;
 import org.springframework.stereotype.Component;
 
 import com.google.gson.annotations.SerializedName;
@@ -58,7 +60,7 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class ObjectDetectionWithTensorflowSavedModelService {
 	
-	public Path predict(ObjectDetectionDto dto, Image img ) throws IOException, ModelNotFoundException, MalformedModelException, TranslateException {
+	public void predict(ObjectDetectionDto dto, Image img ) throws IOException, ModelNotFoundException, MalformedModelException, TranslateException {
 
         String modelUrl = dto.getModelUrl();
         DataType dataType = DataType.valueOf(dto.getInputDataType());
@@ -80,22 +82,19 @@ public class ObjectDetectionWithTensorflowSavedModelService {
         try (ZooModel<Image, DetectedObjects> model = criteria.loadModel();
                 Predictor<Image, DetectedObjects> predictor = model.newPredictor()) {
             DetectedObjects detection = predictor.predict(img);
-            return saveBoundingBoxImage(img, detection, dto);
+            saveBoundingBoxImage(img, detection, dto);
         }		
 	}
 
-    private Path saveBoundingBoxImage(Image img, DetectedObjects detection, ObjectDetectionDto dto)
+    private void saveBoundingBoxImage(Image img, DetectedObjects detection, ObjectDetectionDto dto)
             throws IOException {
-        Path outputDir = Path.of(dto.getDestinationPathDir());
-        Files.createDirectories(outputDir);
-
+    	ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    	Base64OutputStream b64os = new Base64OutputStream(baos);
         img.drawBoundingBoxes(detection);
-
-        Path imagePath = outputDir.resolve("detected-" + dto.getImage().getOriginalFilename());
-        // OpenJDK can't save jpg with alpha channel
-        img.save(Files.newOutputStream(imagePath), "png");
-        log.info("Detected objects image has been saved in: {}", imagePath);
-        return imagePath;
+        img.save(b64os, "png");
+        b64os.close();
+        dto.setImageBase64("data:image/png;base64,"+baos.toString());
+        log.info("Detected objects image has been saved in: {}", dto.getImageBase64());
     }
 
     
