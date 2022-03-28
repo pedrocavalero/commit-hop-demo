@@ -15,7 +15,7 @@ class DemoApplicationTests {
 	void labelMapLoadTest() throws IOException {
 		Map<Integer,String> synset = ObjectDetectionWithTensorflowSavedModelService.MyTranslator.loadSynset();
 		assertEquals("person", synset.get(1));
-		
+		assertEquals("motorcycle", synset.get(4));
 	}
 
 }
