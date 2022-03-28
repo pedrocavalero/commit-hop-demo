@@ -58,9 +58,7 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class ObjectDetectionWithTensorflowSavedModelService {
 	
-	public Path predict(ObjectDetectionDto dto, File image ) throws IOException, ModelNotFoundException, MalformedModelException, TranslateException {
-        Path imageFile = Paths.get(image.getAbsolutePath());
-        Image img = ImageFactory.getInstance().fromFile(imageFile);
+	public Path predict(ObjectDetectionDto dto, Image img ) throws IOException, ModelNotFoundException, MalformedModelException, TranslateException {
 
         String modelUrl = dto.getModelUrl();
         DataType dataType = DataType.valueOf(dto.getInputDataType());
@@ -82,18 +80,18 @@ public class ObjectDetectionWithTensorflowSavedModelService {
         try (ZooModel<Image, DetectedObjects> model = criteria.loadModel();
                 Predictor<Image, DetectedObjects> predictor = model.newPredictor()) {
             DetectedObjects detection = predictor.predict(img);
-            return saveBoundingBoxImage(img, detection, imageFile);
+            return saveBoundingBoxImage(img, detection, dto);
         }		
 	}
 
-    private Path saveBoundingBoxImage(Image img, DetectedObjects detection, Path imageFile)
+    private Path saveBoundingBoxImage(Image img, DetectedObjects detection, ObjectDetectionDto dto)
             throws IOException {
-        Path outputDir = imageFile.getParent();
+        Path outputDir = Path.of(dto.getDestinationPathDir());
         Files.createDirectories(outputDir);
 
         img.drawBoundingBoxes(detection);
 
-        Path imagePath = outputDir.resolve("detected-" + imageFile.getFileName().toString());
+        Path imagePath = outputDir.resolve("detected-" + dto.getImage().getOriginalFilename());
         // OpenJDK can't save jpg with alpha channel
         img.save(Files.newOutputStream(imagePath), "png");
         log.info("Detected objects image has been saved in: {}", imagePath);

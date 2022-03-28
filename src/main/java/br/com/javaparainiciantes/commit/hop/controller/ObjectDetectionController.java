@@ -1,7 +1,6 @@
 package br.com.javaparainiciantes.commit.hop.controller;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 
 import javax.servlet.http.HttpServletRequest;
@@ -12,6 +11,8 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import ai.djl.modality.cv.Image;
+import ai.djl.modality.cv.ImageFactory;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,14 +30,13 @@ public class ObjectDetectionController {
 	}
 
 	@PostMapping("/object-detection/execute")
-	public String executeDetection(HttpServletRequest servletRequest, @ModelAttribute ObjectDetectionDto dto, Model model) {
-        String fileName = dto.getImage().getOriginalFilename();
-
-        File imageFile = new File(servletRequest.getServletContext().getRealPath("/image"), fileName);
+	public String executeDetection(HttpServletRequest servletRequest, @ModelAttribute ObjectDetectionDto dto, Model model) {        
         try
         {
-        	dto.getImage().transferTo(imageFile);
-        	Path predicted = detectorService.predict(dto, imageFile);
+        	Image image = ImageFactory.getInstance().fromInputStream(dto.getImage().getInputStream());
+        	String destinationPathDir = servletRequest.getServletContext().getRealPath("/image");
+        	dto.setDestinationPathDir(destinationPathDir);
+        	Path predicted = detectorService.predict(dto, image);
         	model.addAttribute("dto",dto);
         	model.addAttribute("image", "/image/"+predicted.getFileName());
         	

@@ -23,4 +23,6 @@ public class ObjectDetectionDto implements Serializable {
 
 	private int inputHeigth;
 	
+	private String destinationPathDir;
+	
 }
