@@ -1,1 +1,48 @@
-<h1>Hello World</h1>
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<title>Object Detection Test</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<link
+	href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
+	rel="stylesheet"
+	integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3"
+	crossorigin="anonymous">
+</head>
+<!--Main Navigation-->
+<header>
+	<style>
+#intro {
+	background-image: url(/detected.jpg);
+	background-size: cover;
+	height: 100vh;
+}
+</style>
+
+	<!-- Background image -->
+	<div id="intro" class="bg-image shadow-2-strong">
+		<div class="mask d-flex align-items-center h-100"
+			style="background-color: rgba(0, 0, 0, 0.8);">
+			<div class="container">
+				<div class="row justify-content-center">
+					<div class="col-xl-5 col-md-8">
+						<form class="bg-white  rounded-5 shadow-5-strong p-5">
+							<div class="form-outline mb-4">
+								<a class="form-label" href="/object-detection">Object
+									Detection with Custom Models</a>
+							</div>
+							<div class="form-outline mb-4">
+								<a class="form-label" href="/object-detection-mobilenet">Object
+									Detection Mobilenet Optimized</a>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- Background image -->
+</header>
+<!--Main Navigation-->
+
+</html>

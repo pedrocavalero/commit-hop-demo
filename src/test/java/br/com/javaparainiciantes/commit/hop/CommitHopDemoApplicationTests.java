@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 
 import br.com.javaparainiciantes.commit.hop.controller.ObjectDetectionWithTensorflowSavedModelService;
 
-class DemoApplicationTests {
+class CommitHopDemoApplicationTests {
 
 	@Test
 	void labelMapLoadTest() throws IOException {
